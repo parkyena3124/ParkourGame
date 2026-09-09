@@ -25,7 +25,7 @@ public class PlayerMovement : MonoBehaviour
     public float slideSpeed = 14f;
     public float slideDuration = 0.8f;
 
-    Vector3 velocity;
+    public Vector3 velocity;
 
     bool isGrounded;
     bool isSliding = false;

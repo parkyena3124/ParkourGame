@@ -8,9 +8,7 @@ public class PlayerParkour : MonoBehaviour
     // -------------------------
 
     public float detectDistance = 1.5f;
-
     public float maxVaultHeight = 1.2f;
-    public float maxMantleHeight = 2.2f;
 
     // -------------------------
     // 플레이어 컴포넌트
@@ -24,7 +22,6 @@ public class PlayerParkour : MonoBehaviour
     // -------------------------
 
     public float vaultDuration = 0.4f;
-    public float vaultForwardDistance = 2.4f;
     public float vaultHeight = 1.3f;
 
     bool isVaulting = false;
@@ -35,18 +32,32 @@ public class PlayerParkour : MonoBehaviour
 
     public float mantleDuration = 0.6f;
     public float mantleForwardDistance = 1.2f;
+    public float mantleReachHeight = 1.4f;
 
     bool isMantling = false;
 
+    // -------------------------
+    // Wall Jump 설정
+    // -------------------------
+
+    public float wallCheckDistance = 0.8f;
+    public float wallJumpUpForce = 6f;
+    public float wallJumpSideForce = 6f;
+
     void Update()
     {
-        // Vault 중이거나 Mantle 중에는 새로운 파쿠르 검사 안 함
+        // Vault 또는 Mantle 중이면
+        // 새로운 파쿠르 검사 안 함
         if (isVaulting || isMantling)
         {
             return;
         }
 
-        // 플레이어보다 조금 아래에서 Ray 시작
+        // =========================
+        // 앞 장애물 감지
+        // Vault / Mantle
+        // =========================
+
         Vector3 rayStart =
             transform.position +
             Vector3.down * 0.7f;
@@ -57,36 +68,31 @@ public class PlayerParkour : MonoBehaviour
                 transform.forward
             );
 
-        // Scene에서 빨간 Ray 표시
         Debug.DrawRay(
             rayStart,
-            transform.forward * detectDistance,
+            transform.forward *
+            detectDistance,
             Color.red
         );
 
-        // 앞에 장애물이 있는지 검사
         if (Physics.Raycast(
             ray,
             out RaycastHit hit,
             detectDistance))
         {
-            // 장애물 맨 위 Y 위치
             float obstacleTop =
                 hit.collider.bounds.max.y;
 
-            // 플레이어 발 위치
             float playerFeet =
                 transform.position.y - 1f;
 
-            // 장애물 높이 계산
             float obstacleHeight =
                 obstacleTop -
                 playerFeet;
 
-            Debug.Log(
-                "장애물 높이: " +
-                obstacleHeight
-            );
+            float ledgeDistance =
+                obstacleTop -
+                transform.position.y;
 
             // -------------------------
             // Vault
@@ -96,7 +102,9 @@ public class PlayerParkour : MonoBehaviour
             {
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    StartCoroutine(Vault(hit));
+                    StartCoroutine(
+                        Vault(hit)
+                    );
                 }
             }
 
@@ -104,22 +112,47 @@ public class PlayerParkour : MonoBehaviour
             // Mantle
             // -------------------------
 
-            else if (obstacleHeight <= maxMantleHeight)
+            else if (
+                ledgeDistance <=
+                mantleReachHeight)
             {
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
-                    Debug.Log("Mantle 시작!");
-                    StartCoroutine(Mantle(hit));
+                    StartCoroutine(
+                        Mantle(hit)
+                    );
                 }
             }
+        }
 
-            // -------------------------
-            // 너무 높은 벽
-            // -------------------------
+        // =========================
+        // Wall Jump용 벽 감지
+        // =========================
 
-            else
+        RaycastHit wallHit;
+
+        bool wallDetected =
+            Physics.Raycast(
+                transform.position,
+                transform.right,
+                out wallHit,
+                wallCheckDistance
+            )
+            ||
+            Physics.Raycast(
+                transform.position,
+                -transform.right,
+                out wallHit,
+                wallCheckDistance
+            );
+
+        if (wallDetected)
+        {
+            Debug.Log("옆에 벽 있음");
+
+            if (Input.GetKeyDown(KeyCode.Space))
             {
-                Debug.Log("너무 높음");
+                WallJump(wallHit);
             }
         }
     }
@@ -132,30 +165,26 @@ public class PlayerParkour : MonoBehaviour
     {
         isVaulting = true;
 
-        // Vault 중에는 일반 이동 / 점프 / 중력 정지
         playerMovement.enabled = false;
 
         Vector3 startPosition =
             transform.position;
 
         Vector3 obstacleCenter =
-     hit.collider.bounds.center;
+            hit.collider.bounds.center;
 
         Vector3 obstacleSize =
             hit.collider.bounds.size;
 
-        // 장애물 반대편 끝 위치
         Vector3 obstacleBack =
             obstacleCenter +
             transform.forward *
             (obstacleSize.z / 2f);
 
-        // 장애물을 완전히 지난 뒤 착지할 위치
         Vector3 endPosition =
             obstacleBack +
             transform.forward * 0.8f;
 
-        // 높이는 시작 위치와 같게
         endPosition.y =
             startPosition.y;
 
@@ -166,9 +195,9 @@ public class PlayerParkour : MonoBehaviour
             time += Time.deltaTime;
 
             float progress =
-                time / vaultDuration;
+                time /
+                vaultDuration;
 
-            // 앞으로 이동
             Vector3 position =
                 Vector3.Lerp(
                     startPosition,
@@ -176,54 +205,52 @@ public class PlayerParkour : MonoBehaviour
                     progress
                 );
 
-            // 위로 올라갔다 내려오는 곡선
             position.y +=
                 Mathf.Sin(
                     progress *
                     Mathf.PI
-                ) * vaultHeight;
+                ) *
+                vaultHeight;
 
-            // 현재 위치에서 목표 위치까지 이동
             Vector3 moveAmount =
                 position -
                 transform.position;
 
-            controller.Move(moveAmount);
+            controller.Move(
+                moveAmount
+            );
 
-            // 다음 프레임까지 대기
             yield return null;
         }
 
-        // 일반 이동 다시 활성화
         playerMovement.enabled = true;
 
         isVaulting = false;
     }
 
-
+    // =========================
+    // Mantle
+    // =========================
 
     IEnumerator Mantle(RaycastHit hit)
     {
         isMantling = true;
 
-        // 일반 이동 / 점프 / 중력 잠시 중지
         playerMovement.enabled = false;
 
-        Vector3 startPosition = transform.position;
+        Vector3 startPosition =
+            transform.position;
 
-        // 장애물의 가장 높은 위치
         float obstacleTop =
             hit.collider.bounds.max.y;
 
-        // 플레이어 CharacterController의 절반 높이
         float playerHalfHeight =
             controller.height / 2f;
 
-        // 벽 위에 섰을 때 플레이어 중심의 Y 위치
         float targetY =
-            obstacleTop + playerHalfHeight;
+            obstacleTop +
+            playerHalfHeight;
 
-        // 먼저 벽 위 높이까지 올라감
         Vector3 upPosition =
             new Vector3(
                 startPosition.x,
@@ -231,12 +258,13 @@ public class PlayerParkour : MonoBehaviour
                 startPosition.z
             );
 
-        // 벽 위에서 살짝 안쪽으로 이동
         Vector3 endPosition =
             upPosition +
-            transform.forward * mantleForwardDistance;
+            transform.forward *
+            mantleForwardDistance;
 
-        float halfDuration = mantleDuration / 2f;
+        float halfDuration =
+            mantleDuration / 2f;
 
         // -------------------------
         // 1단계 - 위로 올라가기
@@ -249,7 +277,8 @@ public class PlayerParkour : MonoBehaviour
             time += Time.deltaTime;
 
             float progress =
-                time / halfDuration;
+                time /
+                halfDuration;
 
             Vector3 targetPosition =
                 Vector3.Lerp(
@@ -259,7 +288,8 @@ public class PlayerParkour : MonoBehaviour
                 );
 
             controller.Move(
-                targetPosition - transform.position
+                targetPosition -
+                transform.position
             );
 
             yield return null;
@@ -276,7 +306,8 @@ public class PlayerParkour : MonoBehaviour
             time += Time.deltaTime;
 
             float progress =
-                time / halfDuration;
+                time /
+                halfDuration;
 
             Vector3 targetPosition =
                 Vector3.Lerp(
@@ -286,15 +317,40 @@ public class PlayerParkour : MonoBehaviour
                 );
 
             controller.Move(
-                targetPosition - transform.position
+                targetPosition -
+                transform.position
             );
 
             yield return null;
         }
 
-        // 일반 이동 다시 활성화
         playerMovement.enabled = true;
 
         isMantling = false;
+    }
+
+    // =========================
+    // Wall Jump
+    // =========================
+
+    void WallJump(RaycastHit wallHit)
+    {
+        // 벽 표면에서 바깥쪽을 향하는 방향
+        Vector3 wallNormal =
+            wallHit.normal;
+
+        // 기존 수직 속도 제거
+        playerMovement.velocity.y = 0f;
+
+        // 위로 튀는 힘
+        playerMovement.velocity.y =
+            wallJumpUpForce;
+
+        // 벽 반대쪽으로 밀어냄
+        controller.Move(
+            wallNormal *
+            wallJumpSideForce *
+            Time.deltaTime
+        );
     }
 }
