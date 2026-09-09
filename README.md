@@ -21,7 +21,7 @@ Character Controller, Raycast, Coroutine 등의 Unity/C# 기능이 게임에서 
 ### Phase 2 - 기본 파쿠르 🚧
 - [x] Vault
 - [x] Mantle
-- [ ] Wall Jump
+- [x] Wall Jump
 - [ ] Wall Run
 - [ ] Ledge Grab
 - [ ] 파쿠르 동작 통합 테스트
