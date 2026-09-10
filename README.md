@@ -19,6 +19,7 @@ Character Controller, Raycast, Coroutine 등의 Unity/C# 기능이 게임에서 
 - [x] 슬라이드
 
 ### Phase 2 - 기본 파쿠르 🚧
+- [x] 1인칭과 3인칭 구분(V키)
 - [x] Vault
 - [x] Mantle
 - [x] Wall Jump

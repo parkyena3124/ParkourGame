@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 205573802}
   - component: {fileID: 205573801}
   - component: {fileID: 205573800}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: VaultObstacle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -244,6 +244,7 @@ GameObject:
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
   - component: {fileID: 330585548}
+  - component: {fileID: 330585549}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -381,8 +382,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdf81aa883707224f949e3fadcad3897, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MouseLook
-  mouseSensitivity: 600
+  mouseSensitivity: 400
   playerBody: {fileID: 1191808814}
+--- !u!114 &330585549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec459a04cbcbc9b4db44e80b2d0a4325, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraSwitch
+  firstPersonPoint: {fileID: 1818757224}
+  thirdPersonPoint: {fileID: 1882070049}
+  player: {fileID: 1191808814}
+  mouseLook: {fileID: 330585548}
+  switchKey: 118
+  thirdPersonSensitivity: 400
+  thirdPersonDistance: 4
+  thirdPersonHeight: 1.2
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0
@@ -522,7 +543,7 @@ GameObject:
   - component: {fileID: 575315187}
   - component: {fileID: 575315186}
   - component: {fileID: 575315185}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Obstacle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -575,7 +596,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 0c089926657c9ef4d812dc8170070ff1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -714,7 +735,7 @@ GameObject:
   - component: {fileID: 1034548844}
   - component: {fileID: 1034548843}
   - component: {fileID: 1034548842}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -767,7 +788,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 0c089926657c9ef4d812dc8170070ff1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -907,6 +928,8 @@ Transform:
   m_Children:
   - {fileID: 330585546}
   - {fileID: 891738922}
+  - {fileID: 1882070049}
+  - {fileID: 1818757224}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1191808815
@@ -931,6 +954,9 @@ MonoBehaviour:
   groundMask:
     serializedVersion: 2
     m_Bits: 8
+  isGrounded: 0
+  velocity: {x: 0, y: 0, z: 0}
+  blockNormalJump: 0
   standingHeight: 2
   crouchingHeight: 1
   playerCamera: {fileID: 330585546}
@@ -978,14 +1004,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerParkour
   detectDistance: 1.5
   maxVaultHeight: 1.2
-  maxMantleHeight: 2.2
   controller: {fileID: 1191808816}
   playerMovement: {fileID: 1191808815}
   vaultDuration: 0.4
-  vaultForwardDistance: 2
   vaultHeight: 1
   mantleDuration: 0.6
   mantleForwardDistance: 1.2
+  mantleReachHeight: 1.4
+  wallCheckDistance: 0.8
+  wallJumpUpForce: 6
+  wallJumpSideForce: 6
 --- !u!1 &1606649368
 GameObject:
   m_ObjectHideFlags: 0
@@ -1098,6 +1126,68 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1818757223
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1818757224}
+  m_Layer: 0
+  m_Name: FirstCameraPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1818757224
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1818757223}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.7, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1191808814}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1882070048
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1882070049}
+  m_Layer: 0
+  m_Name: ThirdCameraPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1882070049
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1882070048}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.5, z: -4}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1191808814}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2114496894
 GameObject:
   m_ObjectHideFlags: 0
@@ -1110,7 +1200,7 @@ GameObject:
   - component: {fileID: 2114496897}
   - component: {fileID: 2114496896}
   - component: {fileID: 2114496895}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: MantleObstacle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -1163,7 +1253,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 0c089926657c9ef4d812dc8170070ff1, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

@@ -44,10 +44,22 @@ public class PlayerParkour : MonoBehaviour
     public float wallJumpUpForce = 6f;
     public float wallJumpSideForce = 6f;
 
+    // Wall Jump를 이미 사용했는지 저장
+    bool wallJumpUsed = false;
+
     void Update()
     {
+        // =========================
+        // 착지하면 Wall Jump 초기화
+        // =========================
+
+        if (playerMovement.isGrounded)
+        {
+            wallJumpUsed = false;
+        }
+
         // Vault 또는 Mantle 중이면
-        // 새로운 파쿠르 검사 안 함
+        // 새로운 파쿠르 동작 검사 안 함
         if (isVaulting || isMantling)
         {
             return;
@@ -126,7 +138,7 @@ public class PlayerParkour : MonoBehaviour
         }
 
         // =========================
-        // Wall Jump용 벽 감지
+        // Wall Jump 벽 감지
         // =========================
 
         RaycastHit wallHit;
@@ -146,10 +158,25 @@ public class PlayerParkour : MonoBehaviour
                 wallCheckDistance
             );
 
-        if (wallDetected)
+        // 벽 옆에서는 일반 점프와
+        // Wall Jump가 동시에 실행되지 않도록 함
+        if (playerMovement.isGrounded)
         {
-            Debug.Log("옆에 벽 있음");
+            playerMovement.blockNormalJump = false;
+        }
+        else
+        {
+            playerMovement.blockNormalJump = wallDetected;
+        }
 
+        // =========================
+        // Wall Jump
+        // =========================
+
+        if (wallDetected &&
+            !playerMovement.isGrounded &&
+            !wallJumpUsed)
+        {
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 WallJump(wallHit);
@@ -192,7 +219,8 @@ public class PlayerParkour : MonoBehaviour
 
         while (time < vaultDuration)
         {
-            time += Time.deltaTime;
+            time +=
+                Time.deltaTime;
 
             float progress =
                 time /
@@ -274,7 +302,8 @@ public class PlayerParkour : MonoBehaviour
 
         while (time < halfDuration)
         {
-            time += Time.deltaTime;
+            time +=
+                Time.deltaTime;
 
             float progress =
                 time /
@@ -303,7 +332,8 @@ public class PlayerParkour : MonoBehaviour
 
         while (time < halfDuration)
         {
-            time += Time.deltaTime;
+            time +=
+                Time.deltaTime;
 
             float progress =
                 time /
@@ -324,6 +354,9 @@ public class PlayerParkour : MonoBehaviour
             yield return null;
         }
 
+        // Mantle 중 남아 있던 수직 속도 제거
+        playerMovement.velocity.y = -2f;
+
         playerMovement.enabled = true;
 
         isMantling = false;
@@ -335,14 +368,18 @@ public class PlayerParkour : MonoBehaviour
 
     void WallJump(RaycastHit wallHit)
     {
-        // 벽 표면에서 바깥쪽을 향하는 방향
+        // 이번 공중 상태에서는
+        // Wall Jump를 사용했다고 기록
+        wallJumpUsed = true;
+
+        // 벽 표면의 바깥 방향
         Vector3 wallNormal =
             wallHit.normal;
 
-        // 기존 수직 속도 제거
+        // 기존 위/아래 속도 초기화
         playerMovement.velocity.y = 0f;
 
-        // 위로 튀는 힘
+        // 위쪽으로 점프
         playerMovement.velocity.y =
             wallJumpUpForce;
 
