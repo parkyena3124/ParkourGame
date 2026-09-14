@@ -23,9 +23,9 @@ Character Controller, Raycast, Coroutine 등의 Unity/C# 기능이 게임에서 
 - [x] Vault
 - [x] Mantle
 - [x] Wall Jump
-- [ ] Wall Run
-- [ ] Ledge Grab
-- [ ] 파쿠르 동작 통합 테스트
+- [x] Wall Run
+- [x] Ledge Grab
+- [x] 파쿠르 동작 통합 테스트
 
 ### Phase 3 - Momentum
 - [ ] 이동 속도 / 관성 시스템
