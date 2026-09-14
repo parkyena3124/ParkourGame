@@ -44,22 +44,75 @@ public class PlayerParkour : MonoBehaviour
     public float wallJumpUpForce = 6f;
     public float wallJumpSideForce = 6f;
 
-    // Wall Jump를 이미 사용했는지 저장
     bool wallJumpUsed = false;
+
+    // -------------------------
+    // Wall Run 설정
+    // -------------------------
+
+    public float wallRunGravity = -1.5f;
+    public float wallRunDuration = 1.2f;
+
+    bool isWallRunning = false;
+    bool wallRunUsed = false;
+
+    float wallRunTimer = 0f;
+
+    // -------------------------
+    // Ledge Grab 설정
+    // -------------------------
+
+    public float ledgeGrabDistance = 1.2f;
+    public float ledgeGrabHeight = 0.8f;
+
+    public float ledgeWallOffset = 0.45f;
+    public float ledgeHangOffset = 0.9f;
+
+    bool isLedgeGrabbing = false;
+
+    RaycastHit currentLedgeHit;
 
     void Update()
     {
         // =========================
-        // 착지하면 Wall Jump 초기화
+        // 착지하면 초기화
         // =========================
 
         if (playerMovement.isGrounded)
         {
             wallJumpUsed = false;
+            wallRunUsed = false;
         }
 
-        // Vault 또는 Mantle 중이면
-        // 새로운 파쿠르 동작 검사 안 함
+        // =========================
+        // Ledge Grab 중
+        // =========================
+
+        if (isLedgeGrabbing)
+        {
+            playerMovement.velocity.y = 0f;
+
+            // Space = Mantle
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                isLedgeGrabbing = false;
+
+                StartCoroutine(
+                    Mantle(currentLedgeHit)
+                );
+            }
+
+            // S = 떨어지기
+            else if (Input.GetKeyDown(KeyCode.S))
+            {
+                DropLedge();
+            }
+
+            return;
+        }
+
+        // Vault / Mantle 중이면
+        // 다른 파쿠르 검사 안 함
         if (isVaulting || isMantling)
         {
             return;
@@ -82,8 +135,7 @@ public class PlayerParkour : MonoBehaviour
 
         Debug.DrawRay(
             rayStart,
-            transform.forward *
-            detectDistance,
+            transform.forward * detectDistance,
             Color.red
         );
 
@@ -138,7 +190,7 @@ public class PlayerParkour : MonoBehaviour
         }
 
         // =========================
-        // Wall Jump 벽 감지
+        // 좌우 벽 감지
         // =========================
 
         RaycastHit wallHit;
@@ -158,16 +210,14 @@ public class PlayerParkour : MonoBehaviour
                 wallCheckDistance
             );
 
-        // 벽 옆에서는 일반 점프와
-        // Wall Jump가 동시에 실행되지 않도록 함
-        if (playerMovement.isGrounded)
+        // 벽에서 떨어지면
+        // Wall Run 다시 사용 가능
+        if (!wallDetected)
         {
-            playerMovement.blockNormalJump = false;
+            wallRunUsed = false;
         }
-        else
-        {
-            playerMovement.blockNormalJump = wallDetected;
-        }
+
+        playerMovement.blockNormalJump = false;
 
         // =========================
         // Wall Jump
@@ -182,6 +232,188 @@ public class PlayerParkour : MonoBehaviour
                 WallJump(wallHit);
             }
         }
+
+        // =========================
+        // Wall Run
+        // =========================
+
+        bool movingForward =
+            Input.GetAxis("Vertical") > 0.1f;
+
+        bool canWallRun =
+            wallDetected &&
+            !playerMovement.isGrounded &&
+            movingForward &&
+            !wallJumpUsed &&
+            !wallRunUsed;
+
+        if (canWallRun)
+        {
+            if (!isWallRunning)
+            {
+                isWallRunning = true;
+
+                wallRunTimer =
+                    wallRunDuration;
+            }
+
+            wallRunTimer -=
+                Time.deltaTime;
+
+            if (wallRunTimer > 0f)
+            {
+                playerMovement.velocity.y =
+                    wallRunGravity;
+            }
+            else
+            {
+                isWallRunning = false;
+                wallRunUsed = true;
+            }
+        }
+        else
+        {
+            isWallRunning = false;
+        }
+
+        // =========================
+        // Ledge Grab 감지
+        // =========================
+
+        bool falling =
+            playerMovement.velocity.y < -0.5f;
+
+        bool movingTowardWall =
+            Input.GetAxis("Vertical") > 0.1f;
+
+        if (!playerMovement.isGrounded &&
+            falling &&
+            movingTowardWall)
+        {
+            CheckLedgeGrab();
+        }
+    }
+
+    // =========================
+    // Ledge Grab 감지
+    // =========================
+
+    void CheckLedgeGrab()
+    {
+        Vector3 ledgeRayStart =
+            transform.position +
+            Vector3.up *
+            ledgeGrabHeight;
+
+        Debug.DrawRay(
+            ledgeRayStart,
+            transform.forward *
+            ledgeGrabDistance,
+            Color.green
+        );
+
+        if (Physics.Raycast(
+            ledgeRayStart,
+            transform.forward,
+            out RaycastHit ledgeHit,
+            ledgeGrabDistance))
+        {
+            float obstacleTop =
+                ledgeHit.collider.bounds.max.y;
+
+            float heightDifference =
+                obstacleTop -
+                transform.position.y;
+
+            // 너무 가까운 높이 또는
+            // 너무 높은 난간은 잡지 않음
+            if (heightDifference > 0.4f &&
+                heightDifference <= 1.2f)
+            {
+                StartCoroutine(
+                    SmoothGrabLedge(
+                        ledgeHit,
+                        obstacleTop
+                    )
+                );
+            }
+        }
+    }
+
+    // =========================
+    // Ledge Grab 시작
+    // =========================
+
+    IEnumerator SmoothGrabLedge(
+        RaycastHit ledgeHit,
+        float obstacleTop)
+    {
+        isLedgeGrabbing = true;
+
+        currentLedgeHit =
+            ledgeHit;
+
+        playerMovement.enabled = false;
+        playerMovement.velocity.y = 0f;
+
+        Vector3 startPosition =
+            transform.position;
+
+        Vector3 wallNormal =
+            ledgeHit.normal;
+
+        Vector3 targetPosition =
+            ledgeHit.collider.bounds.center +
+            wallNormal *
+            ledgeWallOffset;
+
+        targetPosition.y =
+            obstacleTop -
+            ledgeHangOffset;
+
+        float grabDuration = 0.15f;
+
+        float time = 0f;
+
+        while (time < grabDuration)
+        {
+            time += Time.deltaTime;
+
+            float progress =
+                time / grabDuration;
+
+            Vector3 newPosition =
+                Vector3.Lerp(
+                    startPosition,
+                    targetPosition,
+                    progress
+                );
+
+            controller.Move(
+                newPosition -
+                transform.position
+            );
+
+            yield return null;
+        }
+    }
+
+    // =========================
+    // Ledge Grab 놓기
+    // =========================
+
+    void DropLedge()
+    {
+        isLedgeGrabbing = false;
+
+        // 벽에서 살짝 떨어짐
+        controller.Move(
+            -transform.forward * 0.3f
+        );
+
+        playerMovement.enabled = true;
+
+        playerMovement.velocity.y = -2f;
     }
 
     // =========================
@@ -219,12 +451,10 @@ public class PlayerParkour : MonoBehaviour
 
         while (time < vaultDuration)
         {
-            time +=
-                Time.deltaTime;
+            time += Time.deltaTime;
 
             float progress =
-                time /
-                vaultDuration;
+                time / vaultDuration;
 
             Vector3 position =
                 Vector3.Lerp(
@@ -250,6 +480,8 @@ public class PlayerParkour : MonoBehaviour
 
             yield return null;
         }
+
+        playerMovement.velocity.y = -2f;
 
         playerMovement.enabled = true;
 
@@ -295,15 +527,14 @@ public class PlayerParkour : MonoBehaviour
             mantleDuration / 2f;
 
         // -------------------------
-        // 1단계 - 위로 올라가기
+        // 1단계 - 위로
         // -------------------------
 
         float time = 0f;
 
         while (time < halfDuration)
         {
-            time +=
-                Time.deltaTime;
+            time += Time.deltaTime;
 
             float progress =
                 time /
@@ -325,15 +556,14 @@ public class PlayerParkour : MonoBehaviour
         }
 
         // -------------------------
-        // 2단계 - 앞으로 올라서기
+        // 2단계 - 앞으로
         // -------------------------
 
         time = 0f;
 
         while (time < halfDuration)
         {
-            time +=
-                Time.deltaTime;
+            time += Time.deltaTime;
 
             float progress =
                 time /
@@ -354,7 +584,6 @@ public class PlayerParkour : MonoBehaviour
             yield return null;
         }
 
-        // Mantle 중 남아 있던 수직 속도 제거
         playerMovement.velocity.y = -2f;
 
         playerMovement.enabled = true;
@@ -368,22 +597,16 @@ public class PlayerParkour : MonoBehaviour
 
     void WallJump(RaycastHit wallHit)
     {
-        // 이번 공중 상태에서는
-        // Wall Jump를 사용했다고 기록
         wallJumpUsed = true;
 
-        // 벽 표면의 바깥 방향
         Vector3 wallNormal =
             wallHit.normal;
 
-        // 기존 위/아래 속도 초기화
         playerMovement.velocity.y = 0f;
 
-        // 위쪽으로 점프
         playerMovement.velocity.y =
             wallJumpUpForce;
 
-        // 벽 반대쪽으로 밀어냄
         controller.Move(
             wallNormal *
             wallJumpSideForce *
