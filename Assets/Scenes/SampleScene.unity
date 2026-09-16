@@ -849,6 +849,11 @@ GameObject:
   - component: {fileID: 1191808816}
   - component: {fileID: 1191808815}
   - component: {fileID: 1191808817}
+  - component: {fileID: 1191808818}
+  - component: {fileID: 1191808819}
+  - component: {fileID: 1191808820}
+  - component: {fileID: 1191808821}
+  - component: {fileID: 1191808822}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -1006,20 +1011,101 @@ MonoBehaviour:
   maxVaultHeight: 1.2
   controller: {fileID: 1191808816}
   playerMovement: {fileID: 1191808815}
+  vault: {fileID: 1191808818}
+  mantle: {fileID: 1191808819}
+  mantleReachHeight: 1.4
+  wallJump: {fileID: 1191808820}
+  wallCheckDistance: 0.8
+  wallRun: {fileID: 1191808821}
+  ledgeGrab: {fileID: 1191808822}
+--- !u!114 &1191808818
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1191808810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 09e0ec6601c371e41b65e4b30ab139cc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Vault
   vaultDuration: 0.4
-  vaultHeight: 1
+  vaultHeight: 1.3
+  controller: {fileID: 1191808816}
+  playerMovement: {fileID: 1191808815}
+  isVaulting: 0
+--- !u!114 &1191808819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1191808810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8cda51a7114ac4c9c63195d4669899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Mantle
   mantleDuration: 0.6
   mantleForwardDistance: 1.2
-  mantleReachHeight: 1.4
-  wallCheckDistance: 0.8
+  controller: {fileID: 1191808816}
+  playerMovement: {fileID: 1191808815}
+  isMantling: 0
+--- !u!114 &1191808820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1191808810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca2d5f681cb754a449900768584800db, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WallJump
   wallJumpUpForce: 6
   wallJumpSideForce: 6
-  wallRunGravity: -2
+  controller: {fileID: 1191808816}
+  playerMovement: {fileID: 1191808815}
+  wallJumpUsed: 0
+--- !u!114 &1191808821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1191808810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39987b55793e8414db7569ac0fa04b0e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WallRun
+  wallRunGravity: -1.5
   wallRunDuration: 1.2
+  playerMovement: {fileID: 1191808815}
+  isWallRunning: 0
+  wallRunUsed: 0
+--- !u!114 &1191808822
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1191808810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb81e58d07eb4c94a8d893774bbc1e5a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LedgeGrab
   ledgeGrabDistance: 1.2
   ledgeGrabHeight: 0.8
   ledgeWallOffset: 0.45
   ledgeHangOffset: 0.9
+  controller: {fileID: 1191808816}
+  playerMovement: {fileID: 1191808815}
+  mantle: {fileID: 1191808819}
+  isLedgeGrabbing: 0
 --- !u!1 &1606649368
 GameObject:
   m_ObjectHideFlags: 0
